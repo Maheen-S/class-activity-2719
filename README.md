@@ -7,3 +7,6 @@ The following are the steps carried out in this MLOps class task:
 - the workflow needs to have steps
 - 1. dockerizing the complete app
   2. pushing the image to docker hub.
+
+
+![screenshot](Screenshot (3020).png)
