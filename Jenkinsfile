@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout dev branch') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/dev']], userRemoteConfigs: [[url: 'https://your-repo-url.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/dev']], userRemoteConfigs: [[url: 'https://github.com/Maheen-S/class-activity-2719.git']]])
             }
         }
         stage('Git Setup') {
