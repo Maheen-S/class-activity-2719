@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        git checkout stage
+                        git checkout stage || git checkout -b stage origin/stage
                         git merge dev --no-ff
                         git push origin stage
                     '''
@@ -33,6 +33,7 @@ pipeline {
             agent {
                 docker {
                     image 'python:3.10'
+                    args '-u root'  // Ensures you have root permissions inside the container
                 }
             }
             steps {
@@ -47,8 +48,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        git checkout main
-                        git merge origin/stage --no-ff
+                        git checkout main || git checkout -b main origin/main
+                        git merge stage --no-ff
                         git push origin main
                     '''
                 }
