@@ -9,7 +9,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Cloning Git') {
+        stage('Clone Git') {
             steps {
                 git([url: 'git@github.com:Maheen-S/class-activity-2719.git', branch: 'main'])
             }
