@@ -35,7 +35,7 @@ pipeline {
             }
         }
 
-        stage('Stop, Remove Container') {
+        stage('Stop, Remove  Container') {
             steps {
                 script {
                     if (isUnix()) {
