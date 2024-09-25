@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Tennis Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>Tennis Play Predictor</h1>
+            <p>Enter the conditions to predict if today is a good day to play tennis!</p>
+        </div>
+        <div class="right-panel">
+            <form id="predictionForm" onsubmit="makePrediction(event)">
+                <div class="input-container">
+                    <select name="outlook" id="outlook" required>
+                        <option value="" disabled selected>Weather (Sunny, Overcast, Rainy)</option>
+                        <option value="Sunny">Sunny</option>
+                        <option value="Overcast">Overcast</option>
+                        <option value="Rainy">Rainy</option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <select name="temperature" id="temperature" required>
+                        <option value="" disabled selected>Temperature (Hot, Mild, Cool)</option>
+                        <option value="Hot">Hot</option>
+                        <option value="Mild">Mild</option>
+                        <option value="Cool">Cool</option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <select name="humidity" id="humidity" required>
+                        <option value="" disabled selected>Humidity (High, Normal)</option>
+                        <option value="High">High</option>
+                        <option value="Normal">Normal</option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <select name="wind" id="wind" required>
+                        <option value="" disabled selected>Wind Strength (Weak, Strong)</option>
+                        <option value="Weak">Weak</option>
+                        <option value="Strong">Strong</option>
+                    </select>
+                </div>
+                <button type="submit">Predict</button>
+            </form>
+            <div id="result"></div>
+        </div>
+    </div>
+    <script>
+        function makePrediction(event) {
+            event.preventDefault(); // Prevent the form from reloading the page
+            
+            const outlook = document.getElementById('outlook').value;
+            const temperature = document.getElementById('temperature').value;
+            const humidity = document.getElementById('humidity').value;
+            const wind = document.getElementById('wind').value;
+
+            // Create an object to send to the Flask server
+            const data = new URLSearchParams();
+            data.append('outlook', outlook);
+            data.append('temperature', temperature);
+            data.append('humidity', humidity);
+            data.append('wind', wind);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('result').innerText = `Prediction: ${result.prediction}`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
