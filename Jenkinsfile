@@ -1,76 +1,67 @@
 pipeline {
-    agent any
     environment {
-        DOCKER_USERNAME = credentials('DOCKER_USERNAME')
-        DOCKER_PASSWORD = credentials('DOCKER_PASSWORD')
+        imagename = "maheens6/class-activity-image"
+        dockerImage = ''
+        containerName = 'class-activity-container'
+        dockerHubCredentials = 'DOCKER_USERNAME'
     }
+
+    agent any
+
     stages {
-        stage('Checkout dev branch') {
+        stage('Clone Git') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/dev']], userRemoteConfigs: [[url: 'https://your-repo-url.git']]])
+                git([url: 'git@github.com:Maheen-S/class-activity-2719.git', branch: 'main'])
             }
         }
-        stage('Git Setup') {
-            steps {
-                sh '''
-                    git config --global user.name "Jenkins"
-                    git config --global user.email "jenkins@example.com"
-                '''
-            }
-        }
-        stage('Merge dev into stage') {
+
+        stage('Building image') {
             steps {
                 script {
-                    sh '''
-                        git checkout stage
-                        git merge dev --no-ff
-                        git push origin stage
-                    '''
+                    dockerImage = docker.build "${imagename}:latest"
                 }
             }
         }
-        stage('Run PyTests on Staging') {
-            agent {
-                docker {
-                    image 'python:3.10'
-                }
-            }
-            steps {
-                sh '''
-                    python -m pip install --upgrade pip
-                    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-                    python -m pytest -v --disable-warnings
-                '''
-            }
-        }
-        stage('Merge stage into main') {
+
+        stage('Running image') {
             steps {
                 script {
-                    sh '''
-                        git checkout main
-                        git merge origin/stage --no-ff
-                        git push origin main
-                    '''
+                    if (isUnix()) {
+                        sh "docker run -d --name ${containerName} ${imagename}:latest"
+                    } else {
+                        bat "docker run -d --name ${containerName} ${imagename}:latest"
+                    }
                 }
             }
         }
-        stage('Build and Push Docker Image') {
+
+        stage('Stop and Remove Container') {
             steps {
                 script {
-                    sh '''
-                        docker build -t dockerimg .
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                        docker tag dockerimg $DOCKER_USERNAME/dockerimg:latest
-                        docker push $DOCKER_USERNAME/dockerimg:latest
-                    '''
+                    if (isUnix()) {
+                        sh "docker stop ${containerName} || true"
+                        sh "docker rm ${containerName} || true"
+                    } else {
+                        bat "docker stop ${containerName} || exit 0"
+                        bat "docker rm ${containerName} || exit 0"
+                    }
                 }
             }
         }
-        stage('Run Docker Container') {
+
+        stage('Deploy Image') {
             steps {
-                sh '''
-                    docker run -d -p 8080:80 $DOCKER_USERNAME/dockerimg:latest
-                '''
+                script {
+                    withCredentials([usernamePassword(credentialsId: dockerHubCredentials, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        if (isUnix()) {
+                            sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                            sh "docker push ${imagename}:latest"
+                        } else {
+                            bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+                            bat "docker push ${imagename}:latest"
+                        }
+                    }
+                }
             }
         }
     }
